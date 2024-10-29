@@ -11,6 +11,7 @@ import android.webkit.WebViewClient
 import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.webkit.WebChromeClient
+import androidx.activity.OnBackPressedCallback
 
 class MainActivity : AppCompatActivity() {
 
@@ -64,8 +65,6 @@ class MainActivity : AppCompatActivity() {
                     }
                 }
 
-                // 나머지 서비스 로직 구현
-
                 return false
             }
 
@@ -86,6 +85,17 @@ class MainActivity : AppCompatActivity() {
             isTimerFinished = true
             hideSplashIfReady()
         }, splashMinimumTime)
+
+        // 뒤로 가기 동작 설정
+        onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
+            override fun handleOnBackPressed() {
+                if (webView.canGoBack()) {
+                    webView.goBack()
+                } else {
+                    finish() // 앱 종료
+                }
+            }
+        })
     }
 
     // 스플래시 화면 숨기기
@@ -94,4 +104,5 @@ class MainActivity : AppCompatActivity() {
             splashView.visibility = View.GONE
         }
     }
+
 }

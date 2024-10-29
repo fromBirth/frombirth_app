@@ -25,8 +25,9 @@
         <!-- 스플래시 이미지 또는 로고 -->
         <ImageView
             android:id="@+id/imageViewSplash"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:src="@drawable/splash" />
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:src="@drawable/splash"
+            android:scaleType="centerCrop" />
     </LinearLayout>
 </FrameLayout>
