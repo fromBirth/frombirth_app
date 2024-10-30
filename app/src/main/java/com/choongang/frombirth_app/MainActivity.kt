@@ -56,12 +56,6 @@ class MainActivity : AppCompatActivity() {
             setLocalNotification(this)
         }
 
-        // 배터리 최적화 해제 요청
-        if (!isIgnoringBatteryOptimizations(this)) {
-            requestIgnoreBatteryOptimizations(this)
-        }
-
-
         // 상태 바를 투명하게 설정
         window.statusBarColor = resources.getColor(android.R.color.transparent)
         window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
@@ -158,15 +152,15 @@ class MainActivity : AppCompatActivity() {
 
             // Calendar 설정(테스트 할 때는 아래의 값을 수정하기)
             val calendar = Calendar.getInstance().apply {
-                set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
-                set(Calendar.HOUR_OF_DAY, 9)
-                set(Calendar.MINUTE, 0)
+                set(Calendar.DAY_OF_WEEK, Calendar.WEDNESDAY)
+                set(Calendar.HOUR_OF_DAY, 14)
+                set(Calendar.MINUTE, 25)
                 set(Calendar.SECOND, 0)
             }
 
             // 현재 시간이 지나간 경우 다음 주 월요일로 설정
             if (calendar.timeInMillis <= System.currentTimeMillis()) {
-                calendar.add(Calendar.WEEK_OF_YEAR, 1)
+                calendar.add(Calendar.MINUTE, 1)
             }
 
             // 반복 알람 설정 (주간 반복)
@@ -176,25 +170,6 @@ class MainActivity : AppCompatActivity() {
                 AlarmManager.INTERVAL_DAY * 7, // 7일 간격
                 pendingIntent
             )
-        }
-    }
-
-    // 백그라운드 관련 배터리 최적화 확인
-    private fun isIgnoringBatteryOptimizations(context: Context): Boolean {
-        val powerManager = context.getSystemService(Context.POWER_SERVICE) as PowerManager
-        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            powerManager.isIgnoringBatteryOptimizations(context.packageName)
-        } else {
-            true
-        }
-    }
-    // 배터리 최적화 해제 요청
-    private fun requestIgnoreBatteryOptimizations(context: Context) {
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            val intent = Intent(android.provider.Settings.ACTION_REQUEST_IGNORE_BATTERY_OPTIMIZATIONS).apply {
-                data = Uri.parse("package:${context.packageName}")
-            }
-            startActivity(intent)
         }
     }
 
