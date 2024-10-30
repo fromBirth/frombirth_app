@@ -152,15 +152,15 @@ class MainActivity : AppCompatActivity() {
 
             // Calendar 설정(테스트 할 때는 아래의 값을 수정하기)
             val calendar = Calendar.getInstance().apply {
-                set(Calendar.DAY_OF_WEEK, Calendar.WEDNESDAY)
-                set(Calendar.HOUR_OF_DAY, 14)
-                set(Calendar.MINUTE, 25)
+                set(Calendar.DAY_OF_WEEK, Calendar.MONDAY)
+                set(Calendar.HOUR_OF_DAY, 9)
+                set(Calendar.MINUTE, 0)
                 set(Calendar.SECOND, 0)
             }
 
             // 현재 시간이 지나간 경우 다음 주 월요일로 설정
             if (calendar.timeInMillis <= System.currentTimeMillis()) {
-                calendar.add(Calendar.MINUTE, 1)
+                calendar.add(Calendar.WEEK_OF_YEAR, 1)
             }
 
             // 반복 알람 설정 (주간 반복)
