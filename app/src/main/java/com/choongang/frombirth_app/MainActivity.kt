@@ -56,10 +56,6 @@ class MainActivity : AppCompatActivity() {
             setLocalNotification(this)
         }
 
-        // 상태 바를 투명하게 설정
-        window.statusBarColor = resources.getColor(android.R.color.transparent)
-        window.decorView.systemUiVisibility = View.SYSTEM_UI_FLAG_LAYOUT_STABLE or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-
         splashView = findViewById(R.id.splashView)
         webView = findViewById(R.id.webView)
 
@@ -111,7 +107,7 @@ class MainActivity : AppCompatActivity() {
         webView.webChromeClient = WebChromeClient()
 
         // 웹 페이지 로드 (React SPA URL) -- 각자 IP 수정
-        webView.loadUrl("http://172.30.1.82:5173/login")
+        webView.loadUrl("http://172.30.1.99:5173/login")
 
         // 최소 스플래시 시간 타이머 시작
         Handler(Looper.getMainLooper()).postDelayed({
