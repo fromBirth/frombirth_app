@@ -1,3 +1,15 @@
+import java.util.Properties
+
+// local.properties 파일에서 속성 값을 불러오는 함수
+fun getLocalProperty(propertyName: String, defaultValue: String = ""): String {
+    val properties = Properties()
+    val localPropertiesFile = rootProject.file("local.properties")
+    if (localPropertiesFile.exists()) {
+        properties.load(localPropertiesFile.inputStream())
+    }
+    return properties.getProperty(propertyName, defaultValue)
+}
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.jetbrains.kotlin.android)
@@ -7,6 +19,10 @@ android {
     namespace = "com.choongang.frombirth_app"
     compileSdk = 34
 
+    buildFeatures {
+        buildConfig = true
+    }
+
     defaultConfig {
         applicationId = "com.choongang.frombirth_app"
         minSdk = 29
@@ -15,6 +31,10 @@ android {
         versionName = "1.0"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+
+        // local.properties 값 사용
+        buildConfigField("String", "KAKAO_API_KEY", "\"${getLocalProperty("KAKAO_API_KEY")}\"")
+        buildConfigField("String", "FRONTEND_URL", "\"${getLocalProperty("FRONTEND_URL")}\"")
     }
 
     buildTypes {

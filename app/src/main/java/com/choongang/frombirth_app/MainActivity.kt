@@ -37,7 +37,7 @@ class MainActivity : AppCompatActivity() {
     private var isPageLoaded = false
     private var isTimerFinished = false
 
-    private var frontendUrl = getString(R.string.frontend_url);
+    private var frontendUrl = BuildConfig.FRONTEND_URL;
 
     //알림 권한 런쳐
     private val notifyPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
