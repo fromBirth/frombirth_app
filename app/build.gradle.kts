@@ -36,7 +36,6 @@ android {
 }
 
 dependencies {
-
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.appcompat)
     implementation(libs.material)
@@ -46,4 +45,6 @@ dependencies {
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     implementation("com.kakao.sdk:v2-user:2.20.6")
+    implementation("com.google.code.gson:gson")
+    implementation ("androidx.security:security-crypto:1.1.0-alpha03")
 }
