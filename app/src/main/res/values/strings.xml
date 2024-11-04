@@ -1,5 +1,5 @@
 <resources>
     <string name="app_name">프롬버스</string>
     <string name="NATIVE_APP_KEY">5de85f74b0f852543e46a79b8119e450</string>
-
+    <string name="frontend_url">http://172.30.1.18:5173</string>
 </resources>
