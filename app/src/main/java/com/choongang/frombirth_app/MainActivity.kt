@@ -156,12 +156,12 @@ class MainActivity : AppCompatActivity() {
         })
     }
 
-    // 안드로이드 파일 선택
-    fun openFileChooser() {
+    // 안드로이드 파일 선택 (isVideo 파라미터로 파일 유형 구분)
+    fun openFileChooser(isVideo: Boolean) {
         val intent = Intent(Intent.ACTION_GET_CONTENT)
         intent.addCategory(Intent.CATEGORY_OPENABLE)
-        intent.type = "image/*"
-        startActivityForResult(Intent.createChooser(intent, "Select Picture"), FILE_CHOOSER_REQUEST_CODE)
+        intent.type = if (isVideo) "video/*" else "image/*"
+        startActivityForResult(Intent.createChooser(intent, "Select ${if (isVideo) "Video" else "Picture"}"), FILE_CHOOSER_REQUEST_CODE)
     }
 
     // 파일 명 가져오기
@@ -184,10 +184,10 @@ class MainActivity : AppCompatActivity() {
     // 파일 선택 콜백을 위한 액티비티 결과 처리
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         if (requestCode == FILE_CHOOSER_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
-            val selectedImageUri = data.data
-            fileChooserCallback?.onReceiveValue(arrayOf(selectedImageUri ?: Uri.EMPTY))
+            val selectedUri = data.data
+            fileChooserCallback?.onReceiveValue(arrayOf(selectedUri ?: Uri.EMPTY))
 
-            selectedImageUri?.let { uri ->
+            selectedUri?.let { uri ->
                 val inputStream = contentResolver.openInputStream(uri)
                 val byteArray = inputStream?.readBytes()
                 inputStream?.close()
@@ -196,9 +196,10 @@ class MainActivity : AppCompatActivity() {
                 // 파일명과 MIME 타입 가져오기
                 val fileName = getFileName(uri)
                 val mimeType = getFileMimeType(uri)
+                val isVideo = mimeType.startsWith("video")
 
-                // JavaScript 함수로 파일명, MIME 타입, base64 데이터 전달
-                webView.evaluateJavascript("javascript:handleBase64Image('$base64String', '$fileName', '$mimeType');", null)
+                // JavaScript 함수로 파일명, MIME 타입, base64 데이터, 파일 유형(isVideo) 전달
+                webView.evaluateJavascript("javascript:handleBase64Image('$base64String', '$fileName', '$mimeType', $isVideo);", null)
             }
         } else {
             fileChooserCallback?.onReceiveValue(null)
