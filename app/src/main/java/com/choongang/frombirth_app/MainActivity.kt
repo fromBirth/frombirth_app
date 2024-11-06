@@ -11,6 +11,8 @@ import android.os.Bundle
 import android.os.Handler
 import android.os.Looper
 import android.os.PowerManager
+import android.provider.OpenableColumns
+import android.util.Base64
 import android.util.Log
 import android.webkit.WebResourceRequest
 import android.webkit.WebView
@@ -19,12 +21,14 @@ import androidx.appcompat.app.AppCompatActivity
 import android.view.View
 import android.webkit.CookieManager
 import android.webkit.JavascriptInterface
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
 import com.choongang.frombirth_app.auth.TokenManager
 import com.choongang.frombirth_app.receiver.AlarmReceiver
+import com.choongang.frombirth_app.util.WebAppInterface
 import java.util.Calendar
 
 class MainActivity : AppCompatActivity() {
@@ -38,6 +42,9 @@ class MainActivity : AppCompatActivity() {
     private var isTimerFinished = false
 
     private var frontendUrl = BuildConfig.FRONTEND_URL;
+
+    private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
+    private val FILE_CHOOSER_REQUEST_CODE = 1
 
     //알림 권한 런쳐
     private val notifyPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
@@ -76,7 +83,8 @@ class MainActivity : AppCompatActivity() {
         // 쿠키 설정
         setTokensAsCookies()
         // JavaScript Interface 설정
-        webView.addJavascriptInterface(TokenHandler(this), "Android")
+        webView.addJavascriptInterface(TokenHandler(this), "Android") //토큰
+        webView.addJavascriptInterface(WebAppInterface(this), "AndroidFileChooser") //파일 탐색기
 
         // 카카오톡 앱으로 이동하도록 하는 WebViewClient 설정
         webView.webViewClient = object : WebViewClient() {
@@ -110,7 +118,22 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        webView.webChromeClient = WebChromeClient()
+        // 안드로이드 파일 탐색기 설정
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onShowFileChooser(
+                webView: WebView?,
+                filePathCallback: ValueCallback<Array<Uri>>?,
+                fileChooserParams: FileChooserParams?
+            ): Boolean {
+                fileChooserCallback = filePathCallback
+                val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
+                    addCategory(Intent.CATEGORY_OPENABLE)
+                    type = "image/*"
+                }
+                startActivityForResult(Intent.createChooser(intent, "Select Picture"), FILE_CHOOSER_REQUEST_CODE)
+                return true
+            }
+        }
 
         // 웹 페이지 로드 (React SPA URL) -- 각자 IP 수정
         webView.loadUrl("$frontendUrl/login")
@@ -131,6 +154,57 @@ class MainActivity : AppCompatActivity() {
                 }
             }
         })
+    }
+
+    // 안드로이드 파일 선택
+    fun openFileChooser() {
+        val intent = Intent(Intent.ACTION_GET_CONTENT)
+        intent.addCategory(Intent.CATEGORY_OPENABLE)
+        intent.type = "image/*"
+        startActivityForResult(Intent.createChooser(intent, "Select Picture"), FILE_CHOOSER_REQUEST_CODE)
+    }
+
+    // 파일 명 가져오기
+    private fun getFileName(uri: Uri): String {
+        var name = "uploadedImage.jpg" // 기본 파일명 설정
+        contentResolver.query(uri, null, null, null, null)?.use { cursor ->
+            val nameIndex = cursor.getColumnIndex(OpenableColumns.DISPLAY_NAME)
+            if (nameIndex != -1 && cursor.moveToFirst()) {
+                name = cursor.getString(nameIndex)
+            }
+        }
+        return name
+    }
+
+    // 파일 타입 가져오기
+    private fun getFileMimeType(uri: Uri): String {
+        return contentResolver.getType(uri) ?: "application/octet-stream" // 기본 MIME 타입 설정
+    }
+
+    // 파일 선택 콜백을 위한 액티비티 결과 처리
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == FILE_CHOOSER_REQUEST_CODE && resultCode == RESULT_OK && data != null) {
+            val selectedImageUri = data.data
+            fileChooserCallback?.onReceiveValue(arrayOf(selectedImageUri ?: Uri.EMPTY))
+
+            selectedImageUri?.let { uri ->
+                val inputStream = contentResolver.openInputStream(uri)
+                val byteArray = inputStream?.readBytes()
+                inputStream?.close()
+                val base64String = Base64.encodeToString(byteArray, Base64.NO_WRAP)
+
+                // 파일명과 MIME 타입 가져오기
+                val fileName = getFileName(uri)
+                val mimeType = getFileMimeType(uri)
+
+                // JavaScript 함수로 파일명, MIME 타입, base64 데이터 전달
+                webView.evaluateJavascript("javascript:handleBase64Image('$base64String', '$fileName', '$mimeType');", null)
+            }
+        } else {
+            fileChooserCallback?.onReceiveValue(null)
+        }
+        fileChooserCallback = null
+        super.onActivityResult(requestCode, resultCode, data)
     }
 
     // 저장된 토큰을 쿠키로 설정하는 함수  -- 각자 IP 수정
