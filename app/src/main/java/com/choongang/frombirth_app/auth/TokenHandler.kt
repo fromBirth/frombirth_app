@@ -11,4 +11,10 @@ class TokenHandler(private val context: Context) {
         val tokenManager = TokenManager(context)
         tokenManager.saveTokens(accessToken, refreshToken)
     }
+    // 토큰 삭제
+    @JavascriptInterface
+    fun clearTokens() {
+        val tokenManager = TokenManager(context)
+        tokenManager.clearTokens()  // 저장된 토큰 삭제
+    }
 }
