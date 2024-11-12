@@ -5,6 +5,7 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -26,8 +27,11 @@ import android.webkit.WebChromeClient
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.core.app.ActivityCompat
+import com.choongang.frombirth_app.auth.TokenHandler
 import com.choongang.frombirth_app.auth.TokenManager
 import com.choongang.frombirth_app.receiver.AlarmReceiver
+import com.choongang.frombirth_app.util.LocationInterface
 import com.choongang.frombirth_app.util.WebAppInterface
 import java.util.Calendar
 
@@ -46,28 +50,29 @@ class MainActivity : AppCompatActivity() {
     private var fileChooserCallback: ValueCallback<Array<Uri>>? = null
     private val FILE_CHOOSER_REQUEST_CODE = 1
 
-    //알림 권한 런쳐
+    // 알림 권한 런처
     private val notifyPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
-        if(isGranted) {
-            // 알림 보내기
+        if (isGranted) {
             setLocalNotification(this)
         } else {
-            Toast.makeText(this, "알림 권한이 거부되었습니다.", Toast.LENGTH_SHORT).show()
-            // 알림 권한이 거부된 경우 처리
+            showToast("알림 권한이 거부되었습니다. 설정에서 권한을 활성화할 수 있습니다.")
+        }
+    }
+
+    // 위치 정보 권한 런처
+    private val locationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
+        if (isGranted) {
+            requestLocationAndSend() // 위치 정보 요청 및 전송 로직 호출
+            requestNotificationPermission() // 알람 권한 체이닝
+        } else {
+            showToast("위치 정보 권한이 필요합니다.")
+            finish()
         }
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-
-        // 알람 실행
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            notifyPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
-        } else { // 기기버전이 낮으면, 알림권한이 필요없음
-            // 알림 메서드를 호출
-            setLocalNotification(this)
-        }
 
         splashView = findViewById(R.id.splashView)
         webView = findViewById(R.id.webView)
@@ -80,11 +85,15 @@ class MainActivity : AppCompatActivity() {
             domStorageEnabled = true
         }
 
+        // 알림 및 위치 권한 요청
+        requestLocationPermission()
+
         // 쿠키 설정
         setTokensAsCookies()
         // JavaScript Interface 설정
         webView.addJavascriptInterface(TokenHandler(this), "Android") //토큰
         webView.addJavascriptInterface(WebAppInterface(this), "AndroidFileChooser") //파일 탐색기
+        webView.addJavascriptInterface(LocationInterface(this, webView), "AndroidLocation") // 위치 정보
 
         // 카카오톡 앱으로 이동하도록 하는 WebViewClient 설정
         webView.webViewClient = object : WebViewClient() {
@@ -278,6 +287,49 @@ class MainActivity : AppCompatActivity() {
                 pendingIntent
             )
         }
+    }
+
+
+    // 알림 권한 요청 (Android 13 이상에서만 필요)
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            if (ActivityCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) == PackageManager.PERMISSION_GRANTED) {
+                setLocalNotification(this)
+            } else {
+                notifyPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+            }
+        } else {
+            setLocalNotification(this)
+        }
+    }
+
+    // 위치 권한 요청
+    private fun requestLocationPermission() {
+        if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            requestLocationAndSend() // 위치 정보 요청 및 전송 로직 호출
+        } else {
+            locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
+        }
+    }
+
+    // 위치 정보 요청 및 전송
+    private fun requestLocationAndSend() {
+//        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
+//        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
+//            location?.let {
+//                val latitude = it.latitude
+//                val longitude = it.longitude
+//                (webView.javaScriptInterface as? LocationInterface)?.sendLocation(latitude, longitude)
+//            } ?: run {
+//                showToast("위치 정보를 가져올 수 없습니다.")
+//            }
+//        }
+        showToast("위치 정보 전송")
+    }
+
+    // 토스트 메시지 표시 함수
+    private fun showToast(message: String) {
+        Toast.makeText(this, message, Toast.LENGTH_SHORT).show()
     }
 
 }

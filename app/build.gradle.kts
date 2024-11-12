@@ -67,4 +67,5 @@ dependencies {
     implementation("com.kakao.sdk:v2-user:2.20.6")
     implementation("com.google.code.gson:gson")
     implementation ("androidx.security:security-crypto:1.1.0-alpha03")
+    implementation("com.google.android.gms:play-services-location:21.0.1")
 }
