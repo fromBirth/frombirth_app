@@ -62,7 +62,6 @@ class MainActivity : AppCompatActivity() {
     // 위치 정보 권한 런처
     private val locationPermissionLauncher = registerForActivityResult(ActivityResultContracts.RequestPermission()) { isGranted ->
         if (isGranted) {
-            requestLocationAndSend() // 위치 정보 요청 및 전송 로직 호출
             requestNotificationPermission() // 알람 권한 체이닝
         } else {
             showToast("위치 정보 권한이 필요합니다.")
@@ -135,11 +134,25 @@ class MainActivity : AppCompatActivity() {
                 fileChooserParams: FileChooserParams?
             ): Boolean {
                 fileChooserCallback = filePathCallback
-                val intent = Intent(Intent.ACTION_GET_CONTENT).apply {
-                    addCategory(Intent.CATEGORY_OPENABLE)
-                    type = "image/*"
+                val acceptTypes = fileChooserParams?.acceptTypes ?: arrayOf("*/*")
+
+                // 이미지와 비디오 타입에 따라 다른 Intent 생성
+                val intent = when {
+                    acceptTypes.contains("image/*") -> Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "image/*"
+                    }
+                    acceptTypes.contains("video/*") -> Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "video/*"
+                    }
+                    else -> Intent(Intent.ACTION_GET_CONTENT).apply {
+                        addCategory(Intent.CATEGORY_OPENABLE)
+                        type = "*/*"
+                    }
                 }
-                startActivityForResult(Intent.createChooser(intent, "Select Picture"), FILE_CHOOSER_REQUEST_CODE)
+
+                startActivityForResult(Intent.createChooser(intent, "Select File"), FILE_CHOOSER_REQUEST_CODE)
                 return true
             }
         }
@@ -289,7 +302,6 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-
     // 알림 권한 요청 (Android 13 이상에서만 필요)
     private fun requestNotificationPermission() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -306,25 +318,11 @@ class MainActivity : AppCompatActivity() {
     // 위치 권한 요청
     private fun requestLocationPermission() {
         if (ActivityCompat.checkSelfPermission(this, Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
-            requestLocationAndSend() // 위치 정보 요청 및 전송 로직 호출
+            // 위치 정보 요청 및 전송 로직 호출
+
         } else {
             locationPermissionLauncher.launch(Manifest.permission.ACCESS_FINE_LOCATION)
         }
-    }
-
-    // 위치 정보 요청 및 전송
-    private fun requestLocationAndSend() {
-//        val fusedLocationClient = LocationServices.getFusedLocationProviderClient(this)
-//        fusedLocationClient.lastLocation.addOnSuccessListener { location ->
-//            location?.let {
-//                val latitude = it.latitude
-//                val longitude = it.longitude
-//                (webView.javaScriptInterface as? LocationInterface)?.sendLocation(latitude, longitude)
-//            } ?: run {
-//                showToast("위치 정보를 가져올 수 없습니다.")
-//            }
-//        }
-        showToast("위치 정보 전송")
     }
 
     // 토스트 메시지 표시 함수
