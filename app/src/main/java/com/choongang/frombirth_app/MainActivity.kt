@@ -82,6 +82,7 @@ class MainActivity : AppCompatActivity() {
             javaScriptCanOpenWindowsAutomatically = true
             setSupportMultipleWindows(true)
             domStorageEnabled = true
+            textZoom = 100 // 텍스트 크기 100%로 고정
         }
 
         // 알림 및 위치 권한 요청

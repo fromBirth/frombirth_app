@@ -14,3 +14,6 @@
 .cxx
 local.properties
 .idea/misc.xml
+# IntelliJ IDEA 설정 파일들
+*.xml
+.idea/
